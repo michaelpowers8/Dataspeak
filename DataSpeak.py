@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+!pip3 install torch
+!pip3 install re
+!pip3 install transformers
+!pip3 install matplotlib
+
 # # DataSpeak
 
 # ## Import Libraries
@@ -16,7 +21,7 @@ from random import randint as rand
 from random import choice
 #import re
 import warnings
-import torch
+#import torch
 import transformers 
 import sklearn.metrics as metrics
 from sklearn.model_selection import train_test_split
