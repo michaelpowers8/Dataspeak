@@ -14,9 +14,9 @@ import numpy as np
 import pandas as pd
 from random import randint as rand
 from random import choice
-#import re
+import re
 import warnings
-#import torch
+import torch
 import transformers 
 import sklearn.metrics as metrics
 from sklearn.model_selection import train_test_split
