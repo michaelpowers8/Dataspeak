@@ -10,8 +10,8 @@
 
 import os
 from time import time,sleep
-import tensorflow_hub as hub
-import tensorflow_text as text
+#import tensorflow_hub as hub
+#import tensorflow_text as text
 import numpy as np
 import pandas as pd
 from random import randint as rand
