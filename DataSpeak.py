@@ -10,13 +10,10 @@
 
 import os
 from time import time,sleep
-#import tensorflow_hub as hub
-#import tensorflow_text as text
 import numpy as np
 import pandas as pd
 from random import randint as rand
 from random import choice
-#import matplotlib.pyplot as plt
 import seaborn as sns
 import re
 import warnings
@@ -423,44 +420,7 @@ stop_words = set(stopwords.words('english'))
 
 
 # ## EDA
-
-# In[ ]:
-
-
-df['Score_question'].plot(kind='hist',
-                          bins=100)
-
-
-# In[ ]:
-
-
-df['Score_answer'].plot(kind='hist',
-                        bins=100)
-
-
-# df['Body'].replace(['<p>','</p>','\n','<ul>','<li>','</li>','</ul>'],'',regex=True)[0]
-
-# In[ ]:
-
-
-comment_words = ''
-for index in range(10000):
-    val = str(df['Body_questions_norm'][index])
-    if(index%50000==0):
-        print(index)
-    # split the value
-    tokens = val.split()
-
-    # Converts each token into lowercase
-    for i in range(len(tokens)):
-        tokens[i] = tokens[i].lower()
-
-    comment_words += " ".join(tokens)+" "
-
-
-# In[ ]:
-
-
+'''
 word_cloud = WordCloud(width = 800, height = 800,
                         background_color ='white',
                         stopwords = stopwords,
@@ -476,13 +436,13 @@ plt.axis("off")
 plt.tight_layout(pad = 0)
  
 plt.show()
-
+'''
 
 # ## Model Training
 
 # In[ ]:
 
-
+'''
 X_train, X_test, y_train, y_test = train_test_split(df['Body_questions_norm'],df['Body_answers_norm'], test_size=0.2)
 
 
@@ -575,7 +535,7 @@ df['Body_answers_norm'][:5]
 
 # In[ ]:
 
-
+'''
 model_name = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertForMaskedLM.from_pretrained(model_name)
