@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-!pip3 install torch
-!pip3 install re
-!pip3 install transformers
-!pip3 install matplotlib
-
 # # DataSpeak
 
 # ## Import Libraries
