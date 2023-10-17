@@ -4,6 +4,5 @@ transformers >= 4.0.0
 matplotlib >= 3.0.0
 -f https://download.pytorch.org/whl/torch_stable.html
 numpy==1.19.1
-torch==1.6.0+cpu
-torchvision==0.7.0+cpu
+torch==1.6.0
 Keras >= 2.0.0
