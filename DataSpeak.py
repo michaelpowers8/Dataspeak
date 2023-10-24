@@ -136,7 +136,6 @@ df = df.reset_index(drop=True)
 
 stop_list = set(stopwords.words('english'))
 X_train, X_test, y_train, y_test = train_test_split(df['Body_Q'],df['Body_A'], test_size=0.2)
-bert_preprocess_model = hub.KerasLayer(preprocess_url)
 corpus_train = X_train
 tokenized_corpus_train = [sentence.lower().split() for sentence in corpus_train]
 corpus_test = X_test
