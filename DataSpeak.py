@@ -40,7 +40,6 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 nltk.download('omw-1.4')
 from transformers import BertForQuestionAnswering, BertTokenizer
-from IPython.display import clear_output
 from transformers import BertTokenizer, BertForMaskedLM
 from transformers import logging
 import streamlit as st
