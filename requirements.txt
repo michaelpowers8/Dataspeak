@@ -11,12 +11,8 @@ transformers
 sklearn
 wordcloud
 gensim
-tqdm.auto
+tqdm
 nltk
-nltk.tokenize
-nltk.tag
-nltk.corpus
-IPython.display
-transformers
+IPython
 transformers
 streamlit
