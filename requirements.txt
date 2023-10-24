@@ -5,7 +5,6 @@ tensorflow_hub
 tensorflow_text
 numpy
 pandas
-random
 seaborn
 re
 warnings
