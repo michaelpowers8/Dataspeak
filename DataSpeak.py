@@ -261,13 +261,13 @@ df = df.reset_index(drop=True)
 # In[12]:
 
 
-df.info()
+
 
 
 # In[13]:
 
 
-df.sample(2)
+
 
 
 # In[14]:
@@ -277,28 +277,7 @@ stop_list = set(stopwords.words('english'))
 
 
 # ## EDA
-df['Score_Q'].plot(kind='hist',
-                          bins=100)df['Score_A'].plot(kind='hist',
-                        bins=100)df['Body'].replace(['<p>','</p>','\n','<ul>','<li>','</li>','</ul>'],'',regex=True)[0]comment_words = ''
-for index in range(len(df)):
-    val = str(df['Body_Q'][index])
-    if(index%10000==0):
-        print(index)
-    # split the value
-    tokens = val.split()
 
-    # Converts each token into lowercase
-    for i in range(len(tokens)):
-        tokens[i] = tokens[i].lower()
-
-    comment_words += " ".join(tokens)word_cloud = WordCloud(width=800,height=800,
-                        background_color='white',
-                        stopwords=stop_list,
-                        min_font_size=10).generate(comment_words)plt.figure(figsize=(8, 8),facecolor=None)
-plt.imshow(word_cloud)
-plt.axis("off")
-plt.tight_layout(pad=0)
-plt.show()
 # ## Model Training
 
 # In[15]:
@@ -392,23 +371,6 @@ st.write(generated_answers)
 
 Ask a question (type 'exit' to quit): 
 
-I am going to start working on a hobby project with a python codebase. I'd like to set up some form of continuous integration (i.e. running a battery of test-cases each time a check-in is made and sending nag e-mails to responsible persons when the tests fail) similar to CruiseControl or TeamCity. I realize I could do this with hooks in most VCSes, but that requires that the tests run on the same machine as the version control server, which isn't as elegant as I would like. Does anyone have any suggestions for a small, user-friendly, open-source continuous integration system suitable for a Python codebase?
-
-I've always liked doing it this way result = { 'a': lambda x: x * 5, 'b': lambda x: x + 7, 'c': lambda x: x - 2 }[value](x) From here
-
-Answer 1: One possibility is Hudson. It's written in Java, but there's integration with Python projects: Hudson embraces Python I've never tried it myself, however. (Update, Sept. 2011: After a trademark dispute Hudson has been renamed to Jenkins.)
-
-Answer 2: We run Buildbot - Trac at work, I haven't used it too much since my code base isn't part of the release cycle yet. But we run the tests on different environments (OSX/Linux/Win) and it sends emails --and it's written in python.
-
-Answer 3: Second the Buildbot - Trac integration. You can find more information about the integration on the Buildbot website. At my previous job, we wrote and used the plugin they mention (tracbb). What the plugin does is rewriting all of the Buildbot urls so you can use Buildbot from within Trac. (http://example.com/tracbb). The really nice thing about Buildbot is that the configuration is written in Python. You can integrate your own Python code directly to the configuration. It's also very easy to write your own BuildSteps to execute specific tasks. We used BuildSteps to get the source from SVN, pull the dependencies, publish test results to WebDAV, etcetera. I wrote an X10 interface so we could send signals with build results. When the build failed, we switched on a red lava lamp. When the build succeeded, a green lava lamp switched on. Good times :-)
-
-Answer 4: We use both Buildbot and Hudson for Jython development. Both are useful, but have different strengths and weaknesses. Buildbot's configuration is pure Python and quite simple once you get the hang of it (look at the epydoc-generated API docs for the most current info). Buildbot makes it easier to define non-testing tasksÃ and distribute the testers. However, it really has no concept of individual tests, just textual, HTML, and summary output, so if you want to have multi-level browsable test output and so forth you'll have to build it yourself, or just use Hudson. Hudson has terrific support for drilling down from overall results into test suites and individual tests; it also is great for comparing test output between builds, but the distributed (master/slave) stuff is comparatively more complicated because you need a Java environment on the slaves too; also, Hudson is less tolerant of flaky network links between the master and slaves. So, to get the benefits of both tools, we run a single instance of Hudson, which catches the common test failures, then we do multi-platform regression with Buildbot. Here are our instances: Jython Hudson Jython buildbot
-
-Answer 5: We are using Bitten wich is integrated with trac. And it's python based.
-
-Ask a question (type 'exit' to quit): exitYou can make li a dictionary: li = {} for j in range(10): li[j] = []
-Answer 1: One possibility is Hudson. It's written in Java, but there's integration with Python projects: Hudson embraces Python I've never tried it myself, however. (Update, Sept. 2011: After a trademark dispute Hudson has been renamed to Jenkins.)
-# In[ ]:
 
 
 
