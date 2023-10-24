@@ -98,7 +98,7 @@ def generate_answers(user_question, df, model, tokenizer, n=5):
     final_answers = []
     for answer in top_answers:
         answer = process_message(answer)
-        final_answers.append(answer)
+        final_answers.append(answer.replace('gt ',''))
 
     return final_answers
 
