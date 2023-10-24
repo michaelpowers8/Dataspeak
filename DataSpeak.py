@@ -150,6 +150,6 @@ st.write("""
          """)
 
 user_question = st.text_input("Input question here.")
-generated_answers = answer_bert_question(user_question,df['Body_A'],word2vec_model)#generate_answers(user_question, df, model, tokenizer, n=5)
+generated_answers = generate_answers(user_question, df, model, tokenizer, n=5)
 
 st.write(generated_answers)
