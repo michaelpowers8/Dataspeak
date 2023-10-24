@@ -6,7 +6,6 @@ tensorflow_text
 numpy
 pandas
 seaborn
-warnings
 torch
 transformers 
 sklearn.metrics
