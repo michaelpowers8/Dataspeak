@@ -10,10 +10,14 @@
 
 import os
 from time import time,sleep
+import tensorflow_hub as hub
+import tensorflow_text as text
 import numpy as np
 import pandas as pd
 from random import randint as rand
 from random import choice
+import matplotlib.pyplot as plt
+import seaborn as sns
 import re
 import warnings
 import torch
@@ -48,108 +52,6 @@ logging.set_verbosity_error()
 # In[2]:
 
 
-def evaluate_model(model, train_features, train_target, test_features, test_target):
-    
-    eval_stats = {}
-    
-    fig, axs = plt.subplots(1, 3, figsize=(20, 6)) 
-    
-    for type, features, target in (('train', train_features, train_target), ('test', test_features, test_target)):
-        
-        eval_stats[type] = {}
-    
-        pred_target = model.predict(features)
-        pred_proba = model.predict_proba(features)[:, 1]
-        
-        # F1
-        f1_thresholds = np.arange(0, 1.01, 0.05)
-        f1_scores = [metrics.f1_score(target, pred_proba>=threshold) for threshold in f1_thresholds]
-        
-        # ROC
-        fpr, tpr, roc_thresholds = metrics.roc_curve(target, pred_proba)
-        roc_auc = metrics.roc_auc_score(target, pred_proba)    
-        eval_stats[type]['ROC AUC'] = roc_auc
-
-        # PRC
-        precision, recall, pr_thresholds = metrics.precision_recall_curve(target, pred_proba)
-        aps = metrics.average_precision_score(target, pred_proba)
-        eval_stats[type]['APS'] = aps
-        
-        if type == 'train':
-            color = 'blue'
-        else:
-            color = 'green'
-
-        # F1 Score
-        ax = axs[0]
-        max_f1_score_idx = np.argmax(f1_scores)
-        ax.plot(f1_thresholds, f1_scores, color=color, label=f'{type}, max={f1_scores[max_f1_score_idx]:.2f} @ {f1_thresholds[max_f1_score_idx]:.2f}')
-        # setting crosses for some thresholds
-        for threshold in (0.2, 0.4, 0.5, 0.6, 0.8):
-            closest_value_idx = np.argmin(np.abs(f1_thresholds-threshold))
-            marker_color = 'orange' if threshold != 0.5 else 'red'
-            ax.plot(f1_thresholds[closest_value_idx], f1_scores[closest_value_idx], color=marker_color, marker='X', markersize=7)
-        ax.set_xlim([-0.02, 1.02])    
-        ax.set_ylim([-0.02, 1.02])
-        ax.set_xlabel('threshold')
-        ax.set_ylabel('F1')
-        ax.legend(loc='lower center')
-        ax.set_title(f'F1 Score') 
-
-        # ROC
-        ax = axs[1]    
-        ax.plot(fpr, tpr, color=color, label=f'{type}, ROC AUC={roc_auc:.2f}')
-        # setting crosses for some thresholds
-        for threshold in (0.2, 0.4, 0.5, 0.6, 0.8):
-            closest_value_idx = np.argmin(np.abs(roc_thresholds-threshold))
-            marker_color = 'orange' if threshold != 0.5 else 'red'            
-            ax.plot(fpr[closest_value_idx], tpr[closest_value_idx], color=marker_color, marker='X', markersize=7)
-        ax.plot([0, 1], [0, 1], color='grey', linestyle='--')
-        ax.set_xlim([-0.02, 1.02])    
-        ax.set_ylim([-0.02, 1.02])
-        ax.set_xlabel('FPR')
-        ax.set_ylabel('TPR')
-        ax.legend(loc='lower center')        
-        ax.set_title(f'ROC Curve')
-        
-        # PRC
-        ax = axs[2]
-        ax.plot(recall, precision, color=color, label=f'{type}, AP={aps:.2f}')
-        # setting crosses for some thresholds
-        for threshold in (0.2, 0.4, 0.5, 0.6, 0.8):
-            closest_value_idx = np.argmin(np.abs(pr_thresholds-threshold))
-            marker_color = 'orange' if threshold != 0.5 else 'red'
-            ax.plot(recall[closest_value_idx], precision[closest_value_idx], color=marker_color, marker='X', markersize=7)
-        ax.set_xlim([-0.02, 1.02])    
-        ax.set_ylim([-0.02, 1.02])
-        ax.set_xlabel('recall')
-        ax.set_ylabel('precision')
-        ax.legend(loc='lower center')
-        ax.set_title(f'PRC')        
-
-        eval_stats[type]['Accuracy'] = metrics.accuracy_score(target, pred_target)
-        eval_stats[type]['F1'] = metrics.f1_score(target, pred_target)
-    
-    df_eval_stats = pd.DataFrame(eval_stats)
-    df_eval_stats = df_eval_stats.round(2)
-    df_eval_stats = df_eval_stats.reindex(index=('Accuracy', 'F1', 'APS', 'ROC AUC'))
-    
-    print(df_eval_stats)
-    
-    return
-
-
-# In[3]:
-
-
-def clean_text(text):
-    cleaned = " ".join(re.sub(r"[^0-9a-zA-Z']", " ", text).split())
-    return cleaned.lower()
-
-
-# In[4]:
-
-
 def generate_word2vec_answer(question, corpus, word2vec_model):
     question_tokens = question.lower().split()
     question_vector = np.mean([word2vec_model.wv[token] for token in question_tokens if token in word2vec_model.wv], axis=0)
@@ -162,20 +64,18 @@ def generate_word2vec_answer(question, corpus, word2vec_model):
         sentence_vectors.append(sentence_vector)
 
     # Calculate cosine similarities between the question vector and sentence vectors
-    #print(jellyfish.levenshtein_distance(str(question), str(corpus)))
     similarities = cosine_similarity([question_vector], sentence_vectors)[0]
     # Find the sentence with the highest similarity as the answer
     max_similarity_index = np.argmax(similarities)
-    print(max_similarity_index)
     answer = corpus[max_similarity_index]
 
     return answer
 
 
-# In[5]:
+# In[3]:
 
 
-def answer_bert_question(question,context):
+def answer_bert_question(question,df,models):
     # Load the pre-trained BERT model and tokenizer
     model_name = "bert-base-uncased"
     tokenizer = BertTokenizer.from_pretrained(model_name)
@@ -189,9 +89,9 @@ def answer_bert_question(question,context):
             final_context.append(word)
     final_context = ' '.join(final_context)
     '''
-    
+    context = generate_word2vec_answer(question, df, models)
     # Tokenize the input text
-    encoding = tokenizer.encode_plus(question, context, return_tensors='pt', max_length=512, truncation=True)
+    encoding = tokenizer.encode_plus(question, context, return_tensors='pt', max_length=512, truncation=False)
     input_ids = encoding['input_ids']
     attention_mask = encoding['attention_mask']
     
@@ -215,37 +115,34 @@ def answer_bert_question(question,context):
     return answer
 
 
-# In[6]:
+# In[4]:
 
 
 def generate_answers(user_question, df, model, tokenizer, n=5):
     # Calculate TF-IDF vectors for questions
     tfidf_vectorizer = TfidfVectorizer()
-    question_tfidf = tfidf_vectorizer.fit_transform(df['Body_questions_norm'])
+    question_tfidf = tfidf_vectorizer.fit_transform(df['Body_Q'])
 
     # Calculate the TF-IDF vector for the user question
     user_question_tfidf = tfidf_vectorizer.transform([user_question])
 
     # Calculate cosine similarity between user question and dataset questions
     similarities = cosine_similarity(user_question_tfidf, question_tfidf)
-    print(sorted(similarities))
-
     # Sort questions by similarity score
     sorted_indices = similarities.argsort()[0][::-1]
-    print(sorted_indices)
 
     # Get the top N answers based on similarity
-    top_answers = df['Body_answers_norm'].iloc[sorted_indices[:n]].tolist()
+    top_answers = df['Body_A'].iloc[sorted_indices[:n]].tolist()
     
     final_answers = []
     for answer in top_answers:
-        answer = rewrite_sentence(answer)
+        #answer = write_new_sentence(answer)
         final_answers.append(answer)
 
     return final_answers
 
 
-# In[7]:
+# In[5]:
 
 
 def calculate_perplexity(answers, model, tokenizer):
@@ -259,35 +156,14 @@ def calculate_perplexity(answers, model, tokenizer):
     return perplexity.item()
 
 
-# In[8]:
-
-
-def is_word(word):
-    # Check if a word is considered valid
-    return len(word) > 1 or word.lower() in ["a", "i"]
-def get_synonyms(word):
-    synonyms = []
-    for syn in wordnet.synsets(word):
-        for lemma in syn.lemmas():
-            synonyms.append(lemma.name())
-    return synonyms
-def preserve_tense(word, new_word):
-    # Preserve the tense of the word
-    if word.endswith('ed'):
-        return new_word + 'ed'
-    elif word.endswith('ing'):
-        return new_word + 'ing'
-    return new_word
-
-
-# In[9]:
+# In[6]:
 
 
 def write_new_sentence(sentence):
     words = sentence.split()
     rewritten_sentence = []
     for word in words:
-        if(word.lower()=='it'):
+        if(word.lower()=='it' or word.lower()=='i' or word.lower()=='will' or word.lower()=='a'):
             rewritten_sentence.append(word)
         else:
             synonyms = get_synonyms(word)
@@ -301,7 +177,7 @@ def write_new_sentence(sentence):
     return ' '.join(rewritten_sentence)
 
 
-# In[10]:
+# In[7]:
 
 
 def clean_sloppy_sentence(sloppy_sentence):
@@ -329,7 +205,7 @@ def clean_sloppy_sentence(sloppy_sentence):
     return cleaned_sentence
 
 
-# In[11]:
+# In[8]:
 
 
 def rewrite_sentence(sentence):
@@ -359,182 +235,125 @@ def rewrite_sentence(sentence):
 
 # ## Load Data
 
-# In[12]:
+# In[9]:
 
 
 preprocess_url = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
 encoder_url = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/4"
 
 
-# In[ ]:
+# In[10]:
 
 
-
-
-
-# In[13]:
-
-
-data = pd.read_csv('Merged_QA.csv', sep=',', on_bad_lines='skip', encoding='latin-1', engine='python')
+data = pd.read_csv('Good_Merged_QA.csv', sep=',', on_bad_lines='skip', encoding='latin-1', engine='python')
 tags = pd.read_csv('Tags.csv', sep=',', on_bad_lines='skip', encoding='latin-1', engine='python')
-
-
-# In[14]:
-
-
-data.describe()
-
-
-# In[15]:
-
-
-tags.info()
 
 
 # ## Clean Data
 
-# In[16]:
+# In[11]:
 
 
-df = data[(data['Score_question'] >= 0) & (data['Score_question'] <= 10) & (data['Score_answer'] >=0) & (data['Score_answer'] <= 10)]
+df = data[(data['Score_Q'] >= 0) & (data['Score_A'] >=0)]
 df = df.reset_index(drop=True)
 
 
-# In[17]:
+# In[12]:
 
 
 df.info()
 
 
-# In[18]:
+# In[13]:
 
 
 df.sample(2)
 
 
-# In[19]:
+# In[14]:
 
 
-stop_words = set(stopwords.words('english'))
+stop_list = set(stopwords.words('english'))
 
 
 # ## EDA
-'''
-word_cloud = WordCloud(width = 800, height = 800,
-                        background_color ='white',
-                        stopwords = stopwords,
-                        min_font_size = 10).generate(comment_words)
+df['Score_Q'].plot(kind='hist',
+                          bins=100)df['Score_A'].plot(kind='hist',
+                        bins=100)df['Body'].replace(['<p>','</p>','\n','<ul>','<li>','</li>','</ul>'],'',regex=True)[0]comment_words = ''
+for index in range(len(df)):
+    val = str(df['Body_Q'][index])
+    if(index%10000==0):
+        print(index)
+    # split the value
+    tokens = val.split()
 
+    # Converts each token into lowercase
+    for i in range(len(tokens)):
+        tokens[i] = tokens[i].lower()
 
-# In[ ]:
-
-
-plt.figure(figsize = (8, 8), facecolor = None)
-plt.imshow(wordcloud)
+    comment_words += " ".join(tokens)word_cloud = WordCloud(width=800,height=800,
+                        background_color='white',
+                        stopwords=stop_list,
+                        min_font_size=10).generate(comment_words)plt.figure(figsize=(8, 8),facecolor=None)
+plt.imshow(word_cloud)
 plt.axis("off")
-plt.tight_layout(pad = 0)
- 
+plt.tight_layout(pad=0)
 plt.show()
-'''
-
 # ## Model Training
 
-# In[ ]:
-
-'''
-X_train, X_test, y_train, y_test = train_test_split(df['Body_questions_norm'],df['Body_answers_norm'], test_size=0.2)
+# In[15]:
 
 
-# In[ ]:
+X_train, X_test, y_train, y_test = train_test_split(df['Body_Q'],df['Body_A'], test_size=0.2)
+
+
+# In[16]:
 
 
 bert_preprocess_model = hub.KerasLayer(preprocess_url)
 
 
-# In[ ]:
+# In[17]:
 
 
 corpus_train = X_train
-tokenized_corpus_train = [sentence.lower().split() for sentence in corpus_train[:100000]]
+tokenized_corpus_train = [sentence.lower().split() for sentence in corpus_train]
 
 
-# In[ ]:
+# In[18]:
 
 
 corpus_test = X_test
-tokenized_corpus_test = [sentence.lower().split() for sentence in corpus_test[:100000]]
+tokenized_corpus_test = [sentence.lower().split() for sentence in corpus_test]
 
 
 # In[ ]:
 
 
-word2vec_model = models.Word2Vec(tokenized_corpus, vector_size=100, window=5, min_count=1, sg=0)
+word2vec_model = models.Word2Vec(tokenized_corpus_train, vector_size=250, window=5, min_count=1, sg=0)
 
 
 # In[ ]:
 
 
-word2vec_model.build_vocab(tokenized_corpus,progress_per=100)
+word2vec_model.build_vocab(tokenized_corpus_train,progress_per=100)
 
 
 # In[ ]:
 
 
-text_preprocessed = bert_preprocess_model(X_train[:100])
-text_preprocessed.keys()
+df['Body_Q'][22]
 
 
 # In[ ]:
 
 
-text_preprocessed
+df['Body_A'][0]
 
 
 # In[ ]:
 
 
-bert_model = hub.KerasLayer(encoder_url)
-
-
-# In[ ]:
-
-
-bert_results = bert_model(text_preprocessed)
-
-
-# In[ ]:
-
-
-bert_results.keys()
-
-
-# In[ ]:
-
-
-len(bert_results['encoder_outputs'])
-
-
-# In[ ]:
-
-
-bert_results
-
-
-# In[ ]:
-
-
-df['Body_questions_norm'][0]
-
-
-# In[ ]:
-
-
-df['Body_answers_norm'][:5]
-
-
-# In[ ]:
-
-'''
 model_name = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertForMaskedLM.from_pretrained(model_name)
@@ -545,18 +364,17 @@ model = BertForMaskedLM.from_pretrained(model_name)
 
 while True:
     question = str(input("Ask a question (type 'exit' to quit): "))
-    os.system('cls')
     if(question.lower() in ['exit','done','none','goodbye','bye','finished']):
         break
-    generated_answers = generate_answers(user_question, df, model, tokenizer, n=5)
+    answer = answer_bert_question(question,df['Body_A'],word2vec_model)
+    print(f"\n{answer}\n\n\n")
+    print(generate_word2vec_answer(question, df['Body_A'], word2vec_model))
+    generated_answers = generate_answers(question, df, model, tokenizer, n=5)
     for i, answer in enumerate(generated_answers):
-        answer = rewrite_sentence(answer)
         print(f"Answer {i + 1}: {answer}\n")
-    #perplexity = calculate_perplexity(generated_answers, model, tokenizer)
-    #print(f"Perplexity: {perplexity}")
 
 
-# In[20]:
+# In[ ]:
 
 
 st.header("BERT Question and Answer")
@@ -568,11 +386,28 @@ st.write("""
 # In[ ]:
 
 
-user_question = st.text_input("")
+user_question = st.text_input("Input question here.")
 generated_answers = generate_answers(user_question, df, model, tokenizer, n=5)
 st.write(generated_answers)
 
+Ask a question (type 'exit' to quit): 
 
+I am going to start working on a hobby project with a python codebase. I'd like to set up some form of continuous integration (i.e. running a battery of test-cases each time a check-in is made and sending nag e-mails to responsible persons when the tests fail) similar to CruiseControl or TeamCity. I realize I could do this with hooks in most VCSes, but that requires that the tests run on the same machine as the version control server, which isn't as elegant as I would like. Does anyone have any suggestions for a small, user-friendly, open-source continuous integration system suitable for a Python codebase?
+
+I've always liked doing it this way result = { 'a': lambda x: x * 5, 'b': lambda x: x + 7, 'c': lambda x: x - 2 }[value](x) From here
+
+Answer 1: One possibility is Hudson. It's written in Java, but there's integration with Python projects: Hudson embraces Python I've never tried it myself, however. (Update, Sept. 2011: After a trademark dispute Hudson has been renamed to Jenkins.)
+
+Answer 2: We run Buildbot - Trac at work, I haven't used it too much since my code base isn't part of the release cycle yet. But we run the tests on different environments (OSX/Linux/Win) and it sends emails --and it's written in python.
+
+Answer 3: Second the Buildbot - Trac integration. You can find more information about the integration on the Buildbot website. At my previous job, we wrote and used the plugin they mention (tracbb). What the plugin does is rewriting all of the Buildbot urls so you can use Buildbot from within Trac. (http://example.com/tracbb). The really nice thing about Buildbot is that the configuration is written in Python. You can integrate your own Python code directly to the configuration. It's also very easy to write your own BuildSteps to execute specific tasks. We used BuildSteps to get the source from SVN, pull the dependencies, publish test results to WebDAV, etcetera. I wrote an X10 interface so we could send signals with build results. When the build failed, we switched on a red lava lamp. When the build succeeded, a green lava lamp switched on. Good times :-)
+
+Answer 4: We use both Buildbot and Hudson for Jython development. Both are useful, but have different strengths and weaknesses. Buildbot's configuration is pure Python and quite simple once you get the hang of it (look at the epydoc-generated API docs for the most current info). Buildbot makes it easier to define non-testing tasksÃ and distribute the testers. However, it really has no concept of individual tests, just textual, HTML, and summary output, so if you want to have multi-level browsable test output and so forth you'll have to build it yourself, or just use Hudson. Hudson has terrific support for drilling down from overall results into test suites and individual tests; it also is great for comparing test output between builds, but the distributed (master/slave) stuff is comparatively more complicated because you need a Java environment on the slaves too; also, Hudson is less tolerant of flaky network links between the master and slaves. So, to get the benefits of both tools, we run a single instance of Hudson, which catches the common test failures, then we do multi-platform regression with Buildbot. Here are our instances: Jython Hudson Jython buildbot
+
+Answer 5: We are using Bitten wich is integrated with trac. And it's python based.
+
+Ask a question (type 'exit' to quit): exitYou can make li a dictionary: li = {} for j in range(10): li[j] = []
+Answer 1: One possibility is Hudson. It's written in Java, but there's integration with Python projects: Hudson embraces Python I've never tried it myself, however. (Update, Sept. 2011: After a trademark dispute Hudson has been renamed to Jenkins.)
 # In[ ]:
 
 
