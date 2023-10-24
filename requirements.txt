@@ -1,9 +1,28 @@
-streamlit
-pandas
-transformers
-matplotlib
+os
+time
+tensorflow_hub
+tensorflow_text
 numpy
+pandas
+random
+matplotlib.pyplot as plt
+seaborn
+re
+warnings
 torch
-Keras
--f https://download.pytorch.org/whl/torch_stable.html
-python
+transformers 
+sklearn.metrics
+sklearn.model_selection
+sklearn.metrics.pairwise 
+sklearn.feature_extraction.text
+wordcloud
+gensim
+tqdm.auto
+nltk
+nltk.tokenize
+nltk.tag
+nltk.corpus
+IPython.display
+transformers
+transformers
+streamlit
