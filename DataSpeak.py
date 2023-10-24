@@ -1,4 +1,3 @@
-import os
 from time import time,sleep
 import tensorflow_hub as hub
 import numpy as np
@@ -10,8 +9,7 @@ import seaborn as sns
 import re
 import warnings
 import torch
-import transformers 
-import sklearn.metrics as metrics
+import random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -158,7 +156,6 @@ while True:
     for i, answer in enumerate(generated_answers):
         print(f"Answer {i + 1}: {answer}\n")
 """
-
 st.header("BERT Question and Answer")
 st.write("""
          Ask any question and I will give you 5 possible answers.
@@ -166,4 +163,5 @@ st.write("""
 
 user_question = st.text_input("Input question here.")
 generated_answers = generate_answers(user_question, df, model, tokenizer, n=5)
-st.write(generated_answers)
+
+st.write(df['Body_A'][random.choice([0,len(df)-2])])
