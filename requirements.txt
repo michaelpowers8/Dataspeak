@@ -6,7 +6,6 @@ tensorflow_text
 numpy
 pandas
 seaborn
-re
 warnings
 torch
 transformers 
