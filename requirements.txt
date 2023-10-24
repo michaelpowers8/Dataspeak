@@ -16,4 +16,4 @@ nltk
 IPython
 transformers
 streamlit
-spacy
+spacy-streamlit
