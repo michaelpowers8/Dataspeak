@@ -44,6 +44,9 @@ def generate_word2vec_answer(question, corpus, word2vec_model):
 
     return answer
 
+def remove_gt(sentence):
+    return sentence.replace('gt ','')
+
 def answer_bert_question(question,df,models):
     # Load the pre-trained BERT model and tokenizer
     model_name = "bert-base-uncased"
@@ -84,6 +87,7 @@ def answer_bert_question(question,df,models):
     return answer
 
 def generate_answers(user_question, df, model, tokenizer, n=5):
+    user_question = remove_gt(user_question)
     tfidf_vectorizer = TfidfVectorizer()
     question_tfidf = tfidf_vectorizer.fit_transform(df['Body_Q'])
     user_question_tfidf = tfidf_vectorizer.transform([user_question])
