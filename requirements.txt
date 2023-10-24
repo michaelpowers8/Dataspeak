@@ -1,3 +1,7 @@
+matplotlib
+Keras
+-f https://download.pytorch.org/whl/torch_stable.html
+python
 os
 time
 tensorflow_hub
@@ -5,7 +9,6 @@ tensorflow_text
 numpy
 pandas
 random
-matplotlib.pyplot as plt
 seaborn
 re
 warnings
