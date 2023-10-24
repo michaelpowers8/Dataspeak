@@ -8,10 +8,7 @@ pandas
 seaborn
 torch
 transformers 
-sklearn.metrics
-sklearn.model_selection
-sklearn.metrics.pairwise 
-sklearn.feature_extraction.text
+sklearn
 wordcloud
 gensim
 tqdm.auto
