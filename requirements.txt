@@ -8,7 +8,7 @@ pandas
 seaborn
 torch
 transformers 
-sklearn
+scikit-learn
 wordcloud
 gensim
 tqdm
