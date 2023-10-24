@@ -1,15 +1,8 @@
 from time import time,sleep
-import tensorflow_hub as hub
 import numpy as np
 import pandas as pd
-from random import randint as rand
-from random import choice
-import matplotlib.pyplot as plt
-import seaborn as sns
-import re
 import warnings
 import torch
-import random
 from sklearn.model_selection import train_test_split
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -30,7 +23,7 @@ from IPython.display import clear_output
 from transformers import BertTokenizer, BertForMaskedLM
 from transformers import logging
 import streamlit as st
-logging.set_verbosity_error()
+import spacy
 
 def generate_word2vec_answer(question, corpus, word2vec_model):
     question_tokens = question.lower().split()
@@ -91,24 +84,16 @@ def answer_bert_question(question,df,models):
     return answer
 
 def generate_answers(user_question, df, model, tokenizer, n=5):
-    # Calculate TF-IDF vectors for questions
     tfidf_vectorizer = TfidfVectorizer()
     question_tfidf = tfidf_vectorizer.fit_transform(df['Body_Q'])
-
-    # Calculate the TF-IDF vector for the user question
     user_question_tfidf = tfidf_vectorizer.transform([user_question])
-
-    # Calculate cosine similarity between user question and dataset questions
     similarities = cosine_similarity(user_question_tfidf, question_tfidf)
-    # Sort questions by similarity score
     sorted_indices = similarities.argsort()[0][::-1]
-
-    # Get the top N answers based on similarity
     top_answers = df['Body_A'].iloc[sorted_indices[:n]].tolist()
     
     final_answers = []
     for answer in top_answers:
-        #answer = write_new_sentence(answer)
+        answer = process_message(answer)
         final_answers.append(answer)
 
     return final_answers
@@ -123,6 +108,33 @@ def calculate_perplexity(answers, model, tokenizer):
     perplexity = torch.exp(torch.nn.functional.cross_entropy(logits, tokenized_answers["input_ids"]))
     return perplexity.item()
 
+def rephrase_sentence(sentence):
+    doc = nlp(sentence)
+    rephrased_sentence = []
+    for token in doc:
+        if token.ent_type_ == "PERSON":
+            rephrased_sentence.append("someone")
+        else:
+            rephrased_sentence.append(token.text)
+    return " ".join(rephrased_sentence)
+
+def process_message(input_message):
+    sentences = input_message.split('.')
+    rephrased_sentences = [rephrase_sentence(sentence) for sentence in sentences]
+    new_message = '.'.join(rephrased_sentences)
+
+    return new_message
+
+def questions_in_terminal():
+    while True:
+        question = str(input("Ask a question (type 'exit' to quit): "))
+        if(question.lower() in ['exit','done','none','goodbye','bye','finished']):
+            break
+        generated_answers = generate_answers(question, df, model, tokenizer, n=5)
+        for i, answer in enumerate(generated_answers):
+            print(f"Answer {i + 1}: {answer}\n")
+
+nlp = spacy.load("en_core_web_sm")
 preprocess_url = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
 encoder_url = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/4"
 
