@@ -144,24 +144,12 @@ model_name = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertForMaskedLM.from_pretrained(model_name)
 
-"""
-while True:
-    question = str(input("Ask a question (type 'exit' to quit): "))
-    if(question.lower() in ['exit','done','none','goodbye','bye','finished']):
-        break
-    answer = answer_bert_question(question,df['Body_A'],word2vec_model)
-    print(f"\n{answer}\n\n\n")
-    print(generate_word2vec_answer(question, df['Body_A'], word2vec_model))
-    generated_answers = generate_answers(question, df, model, tokenizer, n=5)
-    for i, answer in enumerate(generated_answers):
-        print(f"Answer {i + 1}: {answer}\n")
-"""
 st.header("BERT Question and Answer")
 st.write("""
          Ask any question and I will give you 5 possible answers.
          """)
 
 user_question = st.text_input("Input question here.")
-#generated_answers = generate_answers(user_question, df, model, tokenizer, n=5)
+generated_answers = answer_bert_question(user_question,df['Body_A'],word2vec_model)#generate_answers(user_question, df, model, tokenizer, n=5)
 
-st.write(df['Body_A'][random.choice([0,len(df)-2])])
+st.write(generated_answers)
