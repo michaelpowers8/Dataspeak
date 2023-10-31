@@ -310,12 +310,6 @@ df['Body_Q'][70]
 df['Body_A'][70]
 
 
-# In[67]:
-
-
-questions_in_terminal(df,model,tokenizer)
-
-
 # In[ ]:
 
 
