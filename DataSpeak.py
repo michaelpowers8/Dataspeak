@@ -34,7 +34,7 @@ from IPython.display import clear_output
 from PIL import Image
 from transformers import BertTokenizer, BertForMaskedLM
 from transformers import logging
-#import streamlit as st
+import streamlit as st
 import spacy
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 import re
