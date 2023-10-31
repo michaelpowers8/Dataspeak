@@ -331,10 +331,10 @@ for i, answer in enumerate(generated_answers):
     print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][i]}\nPerplexity: {perplexity}\n")
 n = st.slider(1,10)
 generated_answers,similarities,perplexity,sorted_indices = generate_answers(question, df, model, tokenizer, n=5)
-for i in range(len(similarities)):
-    st.write(generated_answers[i])
-    st.write(similarities[0][sorted_indices[i]])
-    st.write(perplexity)
+
+st.write(generated_answers)
+st.write(similarities[0][sorted_indices[:5]])
+st.write(perplexity)
 
 
 # In[ ]:
