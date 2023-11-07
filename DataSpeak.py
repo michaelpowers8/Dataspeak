@@ -13,11 +13,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.tag import pos_tag
 from nltk.corpus import stopwords, wordnet
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 nltk.download('stopwords')
-nltk.download('wordnet')
-nltk.download('omw-1.4')
 from transformers import BertForQuestionAnswering, BertTokenizer
 from IPython.display import clear_output
 from transformers import BertTokenizer, BertForMaskedLM
