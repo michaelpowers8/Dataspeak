@@ -192,38 +192,14 @@ nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
 preprocess_url = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
 encoder_url = "https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/4"
 
-
-# In[12]:
-
-
 data = pd.read_csv('Good_Merged_QA.csv', sep=',', encoding='latin-1', engine='python')
 tags = pd.read_csv('Tags.csv', sep=',', encoding='latin-1', engine='python')
 
-
-# In[13]:
-
-
 df = data[(data['Score_Q'] >= 0) & (data['Score_A'] >=0)]
 df = df.reset_index(drop=True)
-
-
-# In[14]:
-
-
 df['Body_Q'] = df['Body_Q'].apply(remove_gt)
-
-
-# In[15]:
-
-
 df['Body_A'] = df['Body_A'].apply(remove_gt)
-
-
-# In[16]:
-
-
 stop_list = set(stopwords.words('english'))
-
 
 corpus_train = df['Body_Q']
 tokenized_corpus_train = [sentence.lower().split() for sentence in corpus_train]
@@ -237,7 +213,7 @@ model = BertForMaskedLM.from_pretrained(model_name)
 
 st.header("BERT Question and Answer")
 n = st.slider(label="Number of Answers",min_value=int(1),max_value=int(10),step=int(1),value=5)
-st.write(f"Ask any question and I will give you {n} possible answers.")
+st.write(f"Ask any question and I will give you 5 possible answers.")
 user_question = st.text_input("Input question here.")
 generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, n=5)
 st.table(generated_answers)
