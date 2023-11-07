@@ -246,7 +246,7 @@ user_question = st.text_input("Input question here.")
 
 #for i, answer in enumerate(generated_answers):
 #    print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][i]}\nPerplexity: {perplexity}\n")
-generated_answers,similarities,perplexity,sorted_indices = generate_answers(question, df, model, tokenizer, n)
+generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, n)
 
 st.write(generated_answers)
 st.write(similarities[0][sorted_indices[:5]])
