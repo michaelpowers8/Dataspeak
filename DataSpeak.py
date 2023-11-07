@@ -246,6 +246,6 @@ user_question = st.text_input("Input question here.")
 
 generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, int(n))
 table = pd.DataFrame({'Answers':generated_answers,'Similarity':similarities[0][sorted_indices[:5]]})
-st.table(table)
+st.table(generated_answers)
 st.write(similarities[0][sorted_indices[:int(n)]])
 st.write(perplexity)
