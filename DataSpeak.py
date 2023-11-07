@@ -129,6 +129,7 @@ def calculate_perplexity(answers, model, tokenizer):
 
 
 def rephrase_sentence(sentence):
+    global nlp
     doc = nlp(sentence)
     rephrased_sentence = []
     for token in doc:
