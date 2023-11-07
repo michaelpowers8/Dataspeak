@@ -89,7 +89,7 @@ def answer_bert_question(question, df, models, tokenizer):
 # In[44]:
 
 
-def generate_answers(user_question, df, model, tokenizer, n=5):
+def generate_answers(user_question='What is the difference between lists and tuples in python?', df=None, model=None, tokenizer=None, n=5):
     tfidf_vectorizer = TfidfVectorizer()
     question_tfidf = tfidf_vectorizer.fit_transform(df['Body_Q'])
     user_question_tfidf = tfidf_vectorizer.transform([user_question])
@@ -239,9 +239,7 @@ st.header("BERT Question and Answer")
 n = st.slider(label="Number of Answers",min_value=int(1),max_value=int(10),step=int(1),value=5)
 st.write(f"Ask any question and I will give you {n} possible answers.")
 user_question = st.text_input("Input question here.")
-
-generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, int(n))
-table = pd.DataFrame({'Answers':generated_answers,'Similarity':similarities[0][sorted_indices[:5]]})
+generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, n=5)
 st.table(generated_answers)
-st.write(similarities[0][sorted_indices[:int(n)]])
+st.write(similarities[0][sorted_indices[:5]])
 st.write(perplexity)
