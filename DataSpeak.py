@@ -1,14 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # DataSpeak Internship Notebook
-
-# ## Importing Libraries
-
-# In[32]:
-
-
-from time import time,sleep
 import numpy as np
 import pandas as pd
 import warnings
@@ -31,9 +20,7 @@ nltk.download('wordnet')
 nltk.download('omw-1.4')
 from transformers import BertForQuestionAnswering, BertTokenizer
 from IPython.display import clear_output
-from PIL import Image
 from transformers import BertTokenizer, BertForMaskedLM
-from transformers import logging
 import streamlit as st
 import spacy
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
@@ -101,11 +88,6 @@ def answer_bert_question(question, df, models, tokenizer):
     answer_tokens = input_ids[0][start_index:end_index]
     answer = tokenizer.decode(answer_tokens)
     return answer
-#Truncation was not explicitly activated but `max_length` is provided a specific value, 
-#please use `truncation=True` to explicitly truncate examples to max length. 
-#Defaulting to 'longest_first' truncation strategy. If you encode pairs of sequences 
-#(GLUE-style) with the tokenizer you can select this strategy more precisely by 
-#providing a specific strategy to `truncation`.
 
 
 # In[44]:
@@ -182,11 +164,6 @@ def questions_in_terminal(df,model,tokenizer):
         for i, answer in enumerate(generated_answers):
             #print(f"{bert}\n\n")
             print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][sorted_indices[i]]}\nPerplexity: {perplexity}\n")
-        sleep(10)
-
-
-# In[41]:
-
 
 def get_word_cloud(column):
     global df,stop_list
@@ -213,12 +190,6 @@ def get_word_cloud(column):
     plt.tight_layout(pad=0)
     st.pyplot()
     return comment_words
-
-
-# ## Load/Train Models
-
-# In[11]:
-
 
 nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
 preprocess_url = "https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3"
@@ -257,88 +228,25 @@ df['Body_A'] = df['Body_A'].apply(remove_gt)
 stop_list = set(stopwords.words('english'))
 
 
-# In[17]:
-
-
-#get_word_cloud('Body_Q')
-
-
-# In[18]:
-
-
-#get_word_cloud('Body_A')
-
-
-# In[19]:
-
-
-X_train, X_test, y_train, y_test = train_test_split(df['Body_Q'],df['Body_A'], test_size=0.2)
-
-
-# In[20]:
-
-
 corpus_train = df['Body_Q']
 tokenized_corpus_train = [sentence.lower().split() for sentence in corpus_train]
 
-
-# In[21]:
-
-
 word2vec_model = models.Word2Vec(tokenized_corpus_train, vector_size=250, window=5, min_count=1, sg=0)
 word2vec_model.build_vocab(tokenized_corpus_train,progress_per=100)
-
-
-# In[22]:
-
 
 model_name = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertForMaskedLM.from_pretrained(model_name)
 
-
-# ## Ask Questions
-
-# In[71]:
-
-
-df['Body_Q'][90]
-
-
-# In[72]:
-
-
-df['Body_A'][90]
-
-
-# In[ ]:
-
-
-questions_in_terminal(df,model,tokenizer)
-
-
-# In[ ]:
-
-
 st.header("BERT Question and Answer")
-st.write("""
-         Ask any question and I will give you 5 possible answers.
-         """)
-user_question = st.text_input("Input question here.")
-generated_answers,similarities,perplexity = generate_answers(user_question, df, model, tokenizer, n=5)
-
-for i, answer in enumerate(generated_answers):
-    print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][i]}\nPerplexity: {perplexity}\n")
 n = st.slider(1,10)
-generated_answers,similarities,perplexity,sorted_indices = generate_answers(question, df, model, tokenizer, n=5)
+st.write(f"Ask any question and I will give you {n} possible answers.")
+user_question = st.text_input("Input question here.")
+
+#for i, answer in enumerate(generated_answers):
+#    print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][i]}\nPerplexity: {perplexity}\n")
+generated_answers,similarities,perplexity,sorted_indices = generate_answers(question, df, model, tokenizer, n)
 
 st.write(generated_answers)
 st.write(similarities[0][sorted_indices[:5]])
 st.write(perplexity)
-
-
-# In[ ]:
-
-
-
-
