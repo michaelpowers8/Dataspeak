@@ -240,7 +240,7 @@ tokenizer = BertTokenizer.from_pretrained(model_name)
 model = BertForMaskedLM.from_pretrained(model_name)
 
 st.header("BERT Question and Answer")
-n = st.slider(label="Number of Answers",min_value=int(1),max_value=int(10),step=int(1))
+n = st.slider(label="Number of Answers",min_value=int(1),max_value=int(10),step=int(1),value=5)
 st.write(f"Ask any question and I will give you {n} possible answers.")
 user_question = st.text_input("Input question here.")
 
