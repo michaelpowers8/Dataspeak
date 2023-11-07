@@ -244,9 +244,7 @@ n = st.slider(label="Number of Answers",min_value=int(1),max_value=int(10),step=
 st.write(f"Ask any question and I will give you {n} possible answers.")
 user_question = st.text_input("Input question here.")
 
-#for i, answer in enumerate(generated_answers):
-#    print(f"Answer {i + 1}: {answer.replace('  ',' ')}\nSimilarity: {similarities.tolist()[0][i]}\nPerplexity: {perplexity}\n")
 generated_answers,similarities,perplexity,sorted_indices = generate_answers(user_question, df, model, tokenizer, int(n))
-st.table(generated_answers)
-st.write(similarities[0][sorted_indices[:int(n)]])
+st.table(generated_answers,similarities[0][sorted_indices[:int(n)]])
+#st.table(similarities[0][sorted_indices[:int(n)]])
 st.write(perplexity)
